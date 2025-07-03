@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Location Finder</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    input { width: 100%; padding: 8px; font-size: 16px; }
+    ul { list-style: none; padding: 0; margin-top: 10px; }
+    li { padding: 10px; border-bottom: 1px solid #ccc; cursor: pointer; }
+    li:hover { background-color: #f0f0f0; }
+    .addr { font-size: 12px; color: #555; }
+  </style>
+</head>
+<body>
+  <h2>Search for a Location</h2>
+  <input type="text" id="search" placeholder="Start typing a name...">
+  <ul id="results"></ul>
+
+  <script>
+    let locations = [];
+
+    fetch('dispatcher_locations.csv')
+      .then(res => res.text())
+      .then(csv => {
+        const lines = csv.split('\n');
+        lines.shift(); // remove header
+        locations = lines.map(l => {
+          const [name, ...addr] = l.split(',');
+          return { name: name.trim().replace(/^"(.*)"$/, '$1'), address: addr.join(',').trim().replace(/^"(.*)"$/, '$1') };
+        });
+      });
+
+    document.getElementById('search').addEventListener('input', function () {
+      const query = this.value.toLowerCase();
+      const results = locations.filter(loc => loc.name.toLowerCase().includes(query));
+      const resultsList = document.getElementById('results');
+      resultsList.innerHTML = '';
+      results.forEach(loc => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div><strong>${loc.name}</strong></div><div class="addr">${loc.address}</div>`;
+        li.addEventListener('click', () => {
+          navigator.clipboard.writeText(loc.address);
+        });
+        resultsList.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
